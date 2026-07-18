@@ -80,6 +80,14 @@
           </button>
         </div>
         <button class="nav-search-btn" id="navSearchBtn">목적지 검색</button>
+
+        <div class="nav-voice" id="navVoice">
+          <button class="nav-voice__mic" id="navVoiceMic" aria-label="화면을 누른 채로 목적지를 말하세요">
+            <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/></svg>
+          </button>
+          <div class="nav-voice__hint">화면을 누른 채로<br>목적지를 말하세요</div>
+        </div>
+
         <p class="nav-status" id="navStatus"></p>
         <div class="nav-results" id="navResults"></div>
       </div>
@@ -176,6 +184,7 @@
 <script src="./js/camera.js"></script>
 <script src="./js/nav.js"></script>
 <script src="./js/spatial.js"></script>
+<script src="./js/a11y.js"></script>
 <script src="./js/app.js"></script>
 </body>
 </html>

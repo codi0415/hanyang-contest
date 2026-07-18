@@ -58,7 +58,7 @@
     started = true;
     Overlay.init(camOverlay);
     Camera.init(camVideo);
-    Spatial.resume();              // 사용자 탭 시점에 오디오 컨텍스트 활성화(브라우저 정책)
+    Spatial.resume(); A11y.resume();  // 사용자 탭 시점에 오디오 컨텍스트 활성화(브라우저 정책)
     detectEarphones().then(updateSpatial);
     let camOk = false;
     try { await Camera.start(); camOk = true; camPlaceholder.hidden = true; }
@@ -223,12 +223,18 @@
   }
 
   // ─────────── 설정 바인딩 ───────────
+  function speakToggle(el, on) {
+    const row = el.closest('.set-row'); let nm = '';
+    if (row) { const l = row.querySelector('.set-row__label'); if (l) for (const n of l.childNodes) if (n.nodeType === 3 && n.textContent.trim()) { nm = n.textContent.trim(); break; } }
+    TTS.speakUI(`${nm}, ${on ? '켜짐' : '꺼짐'}`); // 토글은 항상 상태를 읽음
+  }
   function bindToggle(id, key, extra) {
     const el = $(id);
     el.addEventListener('click', () => {
       const on = el.getAttribute('aria-checked') !== 'true';
       el.setAttribute('aria-checked', String(on));
       settings[key] = on;
+      speakToggle(el, on);
       if (extra) extra(on);
     });
   }
@@ -291,7 +297,9 @@
     } catch (e) { navStatus.textContent = '검색 오류: ' + e.message; }
   }
 
+  let lastSelectAt = 0;
   async function selectDest(c) {
+    const now = Date.now(); if (now - lastSelectAt < 600) return; lastSelectAt = now; // 중복 선택 방지
     navStatus.textContent = `"${c.name}" 경로를 준비 중…`;
     try { await Nav.startTo(c); show('main'); }
     catch (e) { navStatus.textContent = '경로 오류: ' + e.message; }
@@ -302,18 +310,24 @@
   navStopBtn.addEventListener('click', () => Nav.stop());
   $('tmapRow').addEventListener('click', () => show('nav')); // 설정의 티맵 경로 안내 → 길안내
 
-  // 음성 입력(보조) — iOS Safari STT는 불안정하므로 실패 시 텍스트 안내
+  // 음성 입력 — 탭(마이크) 또는 화면 꾹 눌러 말하기(push-to-talk, a11y). iOS Safari STT 불안정 시 텍스트 폴백.
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  micBtn.addEventListener('click', () => {
+  const navVoiceMic = $('navVoiceMic');
+  let rec = null;
+  function startVoice() {
     if (!SR) { navStatus.textContent = '이 브라우저는 음성 입력을 지원하지 않아요. 텍스트로 입력해 주세요.'; return; }
-    const rec = new SR();
-    rec.lang = 'ko-KR'; rec.interimResults = false; rec.maxAlternatives = 1;
-    micBtn.classList.add('mic-btn--on'); navStatus.textContent = '듣고 있어요…';
+    if (rec) return;
+    rec = new SR(); rec.lang = 'ko-KR'; rec.interimResults = false; rec.maxAlternatives = 1;
+    micBtn.classList.add('mic-btn--on'); if (navVoiceMic) navVoiceMic.classList.add('nav-voice__mic--on');
+    navStatus.textContent = '듣고 있어요…';
     rec.onresult = (e) => { navQuery.value = e.results[0][0].transcript; doNavSearch(); };
     rec.onerror = () => { navStatus.textContent = '음성 인식 실패. 텍스트로 입력해 주세요.'; };
-    rec.onend = () => micBtn.classList.remove('mic-btn--on');
-    try { rec.start(); } catch { micBtn.classList.remove('mic-btn--on'); }
-  });
+    rec.onend = () => { micBtn.classList.remove('mic-btn--on'); if (navVoiceMic) navVoiceMic.classList.remove('nav-voice__mic--on'); rec = null; };
+    try { rec.start(); } catch { rec = null; micBtn.classList.remove('mic-btn--on'); if (navVoiceMic) navVoiceMic.classList.remove('nav-voice__mic--on'); }
+  }
+  function stopVoice() { if (rec) { try { rec.stop(); } catch {} } }
+  micBtn.addEventListener('click', startVoice);
+  if (navVoiceMic) navVoiceMic.addEventListener('click', startVoice);
 
   function renderNavSteps(steps, idx, arrived) {
     navSteps.innerHTML = '';
@@ -395,6 +409,15 @@
 
   // 통합/디버그용 훅: 서버 메시지 형식을 직접 주입해 UI 검증 가능.
   window.WalkAssist = { feed: handleMessage };
+
+  // 시각장애인용 제스처 조작 레이어
+  A11y.init({
+    tabbar,
+    navSection: document.querySelector('[data-screen="nav"]'),
+    navResults,
+    startVoice, stopVoice,
+    settingsSection: document.querySelector('[data-screen="settings"]'),
+  });
 
   show('onboarding');
 })();

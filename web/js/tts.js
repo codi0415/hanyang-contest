@@ -21,6 +21,7 @@ const TTS = (() => {
   let current = null;
   let pending = null;              // 새치기 실패한 안내를 나중에라도 말하기 위한 대기 슬롯(1개)
   let onDuck = () => {};
+  let lastUI = '', lastUIAt = 0;   // UI 즉시발화 중복 억제
   const lastAt = new Map();
   const DEBOUNCE_MS = 3500;
 
@@ -65,6 +66,25 @@ const TTS = (() => {
       if (!current) { speakNow(level, text); return; }
       if (level > current.level) { pending = null; speakNow(level, text); return; } // 새치기
       if (!pending || level >= pending.level) pending = { level, text };            // 버리지 않고 대기
+    },
+
+    // 직접 조작 피드백(메뉴 이름/값/토글 상태): 즉시·최우선으로 말하고 새치기 안 당함.
+    speakUI(text) {
+      if (!enabled || !text || !supported) return;
+      const now = Date.now();
+      if (text === lastUI && now - lastUIAt < 250) return; // 중복 억제
+      lastUI = text; lastUIAt = now;
+      pending = null;
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'ko-KR';
+      if (koVoice) u.voice = koVoice;
+      u.rate = rate; u.volume = volume;
+      u.onstart = () => onDuck(true);
+      u.onend = u.onerror = () => { onDuck(false); if (current && current.text === text) current = null; };
+      current = { level: 99, text };
+      lastAt.set(text, now);
+      synth.cancel();
+      synth.speak(u);
     },
 
     stop() { if (supported) synth.cancel(); current = null; pending = null; }
