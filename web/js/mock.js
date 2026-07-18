@@ -36,7 +36,13 @@ const Mock = (() => {
       o.relevant = Math.random() < 0.12 ? null : (danger < 0.32 || Math.abs(direction) > 0.85 ? false : true);
       obstacles.push(o);
     }
-    return { frame_id: frameId, deviation, obstacles, depth_corroboration: null };
+    // 혼잡: 가끔 medium/high (백엔드는 사람 적으면 null로 안 보냄)
+    let crowd = null;
+    if (Math.random() < 0.25) {
+      const density = Math.random() < 0.4 ? 'high' : 'medium';
+      crowd = { density, flow: null, confidence: +(0.6 + Math.random() * 0.35).toFixed(2), count: rand(6, 25) };
+    }
+    return { frame_id: frameId, deviation, obstacles, depth_corroboration: null, crowd };
   }
 
   return {

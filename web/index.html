@@ -37,6 +37,12 @@
       <!-- 연결 배지 -->
       <div class="conn-badge" id="connBadge" title="서버 연결 상태">오프라인</div>
 
+      <!-- 혼잡(군중) 표시 (medium/high일 때만) -->
+      <div class="crowd-pill" id="crowdPill" role="status" aria-live="polite" hidden>
+        <span class="crowd-pill__icon">👥</span>
+        <span class="crowd-pill__text" id="crowdText">사람 많음</span>
+      </div>
+
       <!-- 길안내 배너 (안내 중일 때만) -->
       <div class="nav-banner glass" id="navBanner" role="status" aria-live="polite" hidden>
         <div class="nav-banner__arrow" id="navBannerArrow">↑</div>

@@ -49,7 +49,7 @@ const Processor = (() => {
       .filter(d => d.cat === 'signal' && !d.below)
       .sort((a, b) => b.confidence - a.confidence)[0] || null;
 
-    return { deviation: msg.deviation || 'normal', dets, topObstacle, traffic };
+    return { deviation: msg.deviation || 'normal', dets, topObstacle, traffic, crowd: msg.crowd || null };
   }
 
   return { process, riskOf };

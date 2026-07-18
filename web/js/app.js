@@ -19,6 +19,7 @@
   const dirHint = $('dirHint'), dirArrow = $('dirArrow');
   const histList = $('histList'), histEmpty = $('histEmpty');
   const chips = $('chips');
+  const crowdPill = $('crowdPill'), crowdText = $('crowdText');
 
   // ── 설정 상태 ──
   const settings = { voice: true, haptic: true, spatial: false, earManual: false, rate: 1.0, volume: 1.0, conf: 0.6, live: false, wsUrl: '' };
@@ -100,6 +101,18 @@
     updateDeviation(r.deviation);
     updateAlertAndVoice(r.deviation, r.topObstacle, r.dets.length);
     updateTraffic(r.traffic);
+    updateCrowd(r.crowd);
+  }
+
+  // 혼잡(군중): null 침묵 / medium·high만 안내(우선순위 crowd). UI는 상단 혼잡 pill로 표시.
+  function updateCrowd(c) {
+    const on = c && (c.density === 'medium' || c.density === 'high');
+    crowdPill.hidden = !on;
+    if (!on) return;
+    const high = c.density === 'high';
+    crowdPill.classList.toggle('crowd-pill--high', high);
+    crowdText.textContent = high ? '주변 혼잡' : '사람 많음';
+    TTS.announce('crowd', high ? '주변에 사람이 많습니다. 주의하세요.' : '주변에 사람이 조금 많습니다.');
   }
 
   // 신호등: state 3원칙 — unknown/null 무음(색 언급 금지) · red/green 색만 · TTS 최하위
