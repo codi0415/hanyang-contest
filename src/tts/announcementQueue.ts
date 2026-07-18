@@ -2,18 +2,18 @@ import * as Speech from 'expo-speech';
 
 /*
  * 음성 안내 우선순위 큐.
- * 우선순위(숫자 클수록 우선):
- *   3 점자블록 이탈 (즉시 새치기)
- *   2 근접 장애물
- *   1 신호등(임계값 이상)
+ * 우선순위(숫자 클수록 우선) — 확정 정책: 근접 장애물 > 점자블록 이탈:
+ *   3 근접 장애물 (즉시 새치기)
+ *   2 점자블록 이탈
+ *   1 신호등(임계값 이상, 향후 색상 기능용)
  *   0 중거리 장애물 / 기타
  * 같은 문장 반복은 디바운스로 억제한다.
  */
 export type AnnounceKind = 'deviation' | 'obstacleNear' | 'traffic' | 'obstacleMid' | 'info';
 
 const PRIORITY: Record<AnnounceKind, number> = {
-  deviation: 3,
-  obstacleNear: 2,
+  obstacleNear: 3,
+  deviation: 2,
   traffic: 1,
   obstacleMid: 0,
   info: 0,

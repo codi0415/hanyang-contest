@@ -14,7 +14,7 @@ export function riskOf(hPx: number, frameH: number): Risk {
 
 const RANK: Record<Risk, number> = { near: 3, mid: 2, far: 1 };
 
-// 백엔드 depth_corroboration(near/medium/far) → 프론트 위험도
+// 백엔드 깊이 표기(near/medium/far) → 프론트 위험도
 const DEPTH_TO_RISK: Record<string, Risk> = { near: 'near', medium: 'mid', far: 'far' };
 
 export interface Processed {
@@ -28,10 +28,12 @@ export function process(msg: ServerMessage, confThreshold: number, frameH: numbe
   const dets: Detection[] = (msg.obstacles ?? []).map((o) => {
     const meta = metaOf(o);
     const below = o.confidence < confThreshold;
+    // 장애물별 실제 깊이(distance)가 오면 그걸 우선 사용, 없으면 bbox 높이로 추정.
+    const risk: Risk = o.distance ? (DEPTH_TO_RISK[o.distance] ?? riskOf(o.y2 - o.y1, frameH)) : riskOf(o.y2 - o.y1, frameH);
     return {
       ...o,
       cat: meta.cat,
-      risk: riskOf(o.y2 - o.y1, frameH),
+      risk,
       below,
       name: o.label,
       confPct: Math.round(o.confidence * 100),
@@ -39,18 +41,6 @@ export function process(msg: ServerMessage, confThreshold: number, frameH: numbe
       chip: meta.chip,
     };
   });
-
-  // depth_corroboration(프레임 단위)이 오면, 가장 큰(=가장 가까울 법한) 장애물의 위험도를 그 값으로 보정.
-  const depth = msg.depth_corroboration ? DEPTH_TO_RISK[msg.depth_corroboration] : null;
-  if (depth) {
-    let primary: Detection | null = null;
-    let maxArea = 0;
-    for (const d of dets) {
-      const area = (d.x2 - d.x1) * (d.y2 - d.y1);
-      if (area > maxArea) { maxArea = area; primary = d; }
-    }
-    if (primary) primary.risk = depth;
-  }
 
   const topObstacle =
     dets

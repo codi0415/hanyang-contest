@@ -12,6 +12,8 @@
       "bundleIdentifier": "com.walkassist.app",
       "infoPlist": {
         "NSCameraUsageDescription": "앞길의 장애물과 점자블록을 감지하기 위해 카메라를 사용합니다.",
+        "NSLocalNetworkUsageDescription": "같은 Wi-Fi의 추론 서버에 연결합니다.",
+        "NSAppTransportSecurity": { "NSAllowsLocalNetworking": true },
         "UIBackgroundModes": ["audio"]
       }
     },
@@ -30,7 +32,7 @@
         "expo-build-properties",
         {
           "ios": { "deploymentTarget": "15.1" },
-          "android": { "minSdkVersion": 26 }
+          "android": { "minSdkVersion": 26, "usesCleartextTraffic": true }
         }
       ]
     ]

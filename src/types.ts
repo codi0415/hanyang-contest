@@ -4,9 +4,10 @@
 export type Deviation = 'normal' | 'left' | 'right';
 
 export interface ServerObstacle {
-  label: string;           // COCO 14종 한국어 라벨 (labels.ts 참고)
+  label: string;           // COCO 14종 한국어 라벨 (classify.ts 참고)
   confidence: number;      // 0.0~1.0 (소수 3자리 반올림)
   x1: number; y1: number; x2: number; y2: number; // 전송한 프레임 픽셀 좌표
+  distance?: 'near' | 'medium' | 'far' | null;     // 장애물별 단안 깊이(있으면 bbox 추정보다 우선)
 }
 
 export interface ServerMessage {

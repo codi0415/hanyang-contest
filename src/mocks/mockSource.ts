@@ -34,7 +34,10 @@ export class MockSource {
     const obstacles: ServerMessage['obstacles'] = [];
     const n = Math.random() < 0.6 ? rand(1, 2) : 0;
     for (let i = 0; i < n; i++) {
-      obstacles.push({ label: pick(LABELS), confidence: conf(0.45, 0.97), ...box() });
+      const b = box();
+      const hFrac = (b.y2 - b.y1) / 480; // 실제 백엔드처럼 장애물별 distance도 채워 넣음
+      const distance = hFrac > 0.55 ? 'near' : hFrac > 0.32 ? 'medium' : 'far';
+      obstacles.push({ label: pick(LABELS), confidence: conf(0.45, 0.97), ...b, distance });
     }
     return { frame_id: this.frameId, deviation, obstacles, depth_corroboration: null };
   }
