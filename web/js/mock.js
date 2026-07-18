@@ -25,7 +25,11 @@ const Mock = (() => {
       const b = box();
       const hFrac = (b.y2 - b.y1) / 480;
       const distance = hFrac > 0.55 ? 'near' : hFrac > 0.32 ? 'medium' : 'far';
-      obstacles.push({ label: pick(LIST), confidence: conf(0.45, 0.97), ...b, distance });
+      // 백엔드 추가 필드: direction(-1..1, 가로중심), danger(0..1, 근접·큰 물체일수록 큼)
+      const cx = (b.x1 + b.x2) / 2;
+      const direction = +((cx / 640) * 2 - 1).toFixed(2);
+      const danger = +Math.min(1, (distance === 'near' ? 0.8 : distance === 'medium' ? 0.5 : 0.25) + hFrac * 0.3).toFixed(2);
+      obstacles.push({ label: pick(LIST), confidence: conf(0.45, 0.97), ...b, distance, direction, danger });
     }
     return { frame_id: frameId, deviation, obstacles, depth_corroboration: null };
   }

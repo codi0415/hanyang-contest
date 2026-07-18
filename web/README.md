@@ -45,6 +45,18 @@ POST /nav/route  { start:{lat,lng}, dest:{lat,lng}, startName?, destName? }
 - `/nav/*` same-origin(8443)이라 상대경로 fetch 그대로. CORS도 열려 있어 타 오리진도 OK
 - 백엔드 stateless → **경로 이탈 시 프론트가 현재 GPS를 start로 `/nav/route` 재호출**(nav.js에 reroute 구현됨)
 
+## 공간음향 (이어폰 방향 알림)
+- 백엔드가 obstacle마다 주는 `direction`(-1..1, 화면 가로중심)·`danger`(0..1)로 **HRTF 공간 비프**.
+- 파라미터(확정): 700Hz 사인 · 90ms · 최대볼륨 0.6 · 방향폭 ±80° · 간격 near130/medium520/far1100ms.
+- **겹침 방지**: 매 프레임 `below`(저신뢰) 제외 후 `danger` 최대 1개만 반복 비프. 없으면 침묵.
+- TTS 발화 중엔 비프 볼륨 덕킹(×0.35). `AudioContext`는 카메라 시작(사용자 탭) 때 resume.
+- **이어폰 착용 시에만 작동** — 설정 "이어폰 방향 알림" 토글(기본 off).
+
+> ⚠️ 웹은 이어폰 연결을 **완벽히 자동감지할 표준 API가 없습니다.** `enumerateDevices()`로
+> 출력기기 라벨을 검사해 감지하지만(데스크톱 크롬 등에선 동작), **iOS Safari는 출력기기 열거가
+> 막혀 자동감지가 안 됩니다.** 이 경우 설정에 "이어폰 착용 중(수동 확인)" 토글이 나타나며,
+> 사용자가 켜면 활성화됩니다. (감지 상태는 설정에서 실시간 표시)
+
 ## 구조
 ```
 web/
@@ -58,6 +70,7 @@ web/
   js/mock.js        Mock 소스
   js/camera.js      getUserMedia → 640×480 JPEG 전송
   js/nav.js         길안내(검색/경로/GPS 안내) + Mock
-  js/app.js         화면/음성/기록/내비 오케스트레이션
+  js/spatial.js     공간음향 비프(HRTF) + 이어폰 게이팅 + 덕킹
+  js/app.js         화면/음성/기록/내비/공간음향 오케스트레이션
 ```
 디버그: 콘솔에서 `WalkAssist.feed({frame_id:1,deviation:'normal',obstacles:[...],depth_corroboration:null})` 로 임의 프레임 주입 가능.

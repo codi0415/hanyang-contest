@@ -16,6 +16,7 @@ const TTS = (() => {
 
   let enabled = true, rate = 1.0, volume = 1.0;
   let current = null;
+  let onDuck = () => {};   // TTS 발화 시작/끝을 공간음향 덕킹에 연결
   const lastAt = new Map();
   const DEBOUNCE_MS = 3500;
 
@@ -33,7 +34,8 @@ const TTS = (() => {
     u.lang = 'ko-KR';
     if (koVoice) u.voice = koVoice;
     u.rate = rate; u.volume = volume;
-    u.onend = u.onerror = () => { if (current && current.text === text) current = null; };
+    u.onstart = () => onDuck(true);
+    u.onend = u.onerror = () => { onDuck(false); if (current && current.text === text) current = null; };
     current = { level, text };
     lastAt.set(text, Date.now());
     synth.cancel();
@@ -41,9 +43,10 @@ const TTS = (() => {
   }
 
   return {
-    setEnabled(v) { enabled = !!v; if (!enabled && supported) { synth.cancel(); current = null; } },
+    setEnabled(v) { enabled = !!v; if (!enabled && supported) { synth.cancel(); current = null; onDuck(false); } },
     setRate(r) { rate = +r; },
     setVolume(v) { volume = +v; },
+    setDuckHandler(fn) { onDuck = fn || (() => {}); },
     supported,
     announce(kind, text) {
       if (!enabled || !text) return;

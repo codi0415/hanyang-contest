@@ -21,7 +21,7 @@
   const chips = $('chips');
 
   // ── 설정 상태 ──
-  const settings = { voice: true, haptic: true, rate: 1.0, volume: 1.0, conf: 0.6, live: false, wsUrl: '' };
+  const settings = { voice: true, haptic: true, spatial: false, earManual: false, rate: 1.0, volume: 1.0, conf: 0.6, live: false, wsUrl: '' };
 
   // 같은 서버(=페이지를 서빙한 곳)로 자동 연결하는 기본 WS 주소.
   function defaultWsUrl() {
@@ -45,6 +45,7 @@
     tabbar.classList.toggle('tabbar--light', name === 'history' || name === 'settings' || name === 'nav');
     for (const t of tabs) t.classList.toggle('tab--active', t.dataset.goto === name);
     if (name === 'history') renderHistory();
+    if (name === 'settings') detectEarphones().then(updateSpatial);
   }
   tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.goto)));
 
@@ -56,6 +57,8 @@
     started = true;
     Overlay.init(camOverlay);
     Camera.init(camVideo);
+    Spatial.resume();              // 사용자 탭 시점에 오디오 컨텍스트 활성화(브라우저 정책)
+    detectEarphones().then(updateSpatial);
     let camOk = false;
     try { await Camera.start(); camOk = true; camPlaceholder.hidden = true; }
     catch (e) { camPlaceholder.innerHTML = '카메라를 열 수 없어요<br><span>' + (e.message || '') + '</span>'; }
@@ -93,6 +96,7 @@
     const r = Processor.process(msg, settings.conf, FRAME.h);
     Overlay.draw(r.dets);
     renderChips(r.dets);
+    Spatial.onFrame(r.dets);   // 공간음향: 가장 위험한 장애물 방향 비프 (이어폰+토글 시)
     updateDeviation(r.deviation);
     updateAlertAndVoice(r.deviation, r.topObstacle, r.dets.length);
   }
@@ -324,6 +328,41 @@
   });
 
   Nav.setLive(settings.live);
+
+  // ─────────── 공간음향 (이어폰 방향 알림) ───────────
+  const tgSpatial = $('tgSpatial'), tgEarManual = $('tgEarManual'), spatialStatus = $('spatialStatus'), earManualRow = $('earManualRow');
+  let earState = 'unknown'; // 'connected' | 'speaker' | 'unknown'
+
+  async function detectEarphones() {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) { earState = 'unknown'; return; }
+      const devs = await navigator.mediaDevices.enumerateDevices();
+      const outs = devs.filter((d) => d.kind === 'audiooutput');
+      if (!outs.length) { earState = 'unknown'; return; } // iOS Safari 등: 출력기기 열거 불가
+      const re = /(head|ear|air ?pod|buds|bluetooth|헤드|이어|에어팟|버즈|블루투스|a2dp|hands.?free)/i;
+      earState = outs.some((d) => re.test(d.label || '')) ? 'connected' : 'speaker';
+    } catch { earState = 'unknown'; }
+  }
+
+  function updateSpatial() {
+    Spatial.setEnabled(settings.spatial);
+    Spatial.setAllowed(earState === 'connected' || settings.earManual);
+    earManualRow.hidden = !settings.spatial;
+    if (!settings.spatial) { spatialStatus.hidden = true; return; }
+    spatialStatus.hidden = false;
+    spatialStatus.classList.remove('spatial-status--ok', 'spatial-status--warn');
+    if (earState === 'connected') { spatialStatus.classList.add('spatial-status--ok'); spatialStatus.textContent = '🎧 이어폰 감지됨 · 작동 중'; }
+    else if (settings.earManual) { spatialStatus.classList.add('spatial-status--ok'); spatialStatus.textContent = '🎧 이어폰 착용(수동) · 작동 중'; }
+    else if (earState === 'speaker') { spatialStatus.classList.add('spatial-status--warn'); spatialStatus.textContent = '이어폰을 연결하면 시작돼요 (현재 스피커 출력)'; }
+    else { spatialStatus.classList.add('spatial-status--warn'); spatialStatus.textContent = '이어폰 자동 감지 불가 — 아래 “이어폰 착용 중”을 켜세요'; }
+  }
+
+  bindToggle('tgSpatial', 'spatial', (on) => { if (on) Spatial.resume(); detectEarphones().then(updateSpatial); });
+  bindToggle('tgEarManual', 'earManual', () => updateSpatial());
+  if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
+    navigator.mediaDevices.addEventListener('devicechange', () => detectEarphones().then(updateSpatial));
+  }
+  TTS.setDuckHandler((on) => Spatial.setDuck(on));
 
   $('wsAuto').textContent = AUTO_URL;
   TTS.setRate(settings.rate); TTS.setVolume(settings.volume); TTS.setEnabled(settings.voice);
