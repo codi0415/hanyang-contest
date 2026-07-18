@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#ff7a59">
+<title>보행 도우미 · 장애물 탐지</title>
+<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+<div class="phone">
+  <div class="app" id="app">
+
+    <!-- ───────────── 온보딩 ───────────── -->
+    <section class="screen screen--onboarding" data-screen="onboarding">
+      <div class="ob-logo"><div class="ob-logo__dot"></div></div>
+      <h1 class="ob-title">가는 길을 더 안전하게</h1>
+      <p class="ob-sub">카메라로 앞길의 장애물과 점자블록을 감지하고<br>음성과 진동으로 미리 알려드려요</p>
+      <button class="ob-start" id="startBtn">시작하기</button>
+      <p class="ob-note">시작하면 카메라 접근 권한을 요청해요</p>
+    </section>
+
+    <!-- ───────────── 메인(보행) ───────────── -->
+    <section class="screen screen--main" data-screen="main" hidden>
+      <video class="cam-video" id="camVideo" playsinline muted autoplay></video>
+      <canvas class="cam-overlay" id="camOverlay" width="640" height="480"></canvas>
+      <div class="cam-placeholder" id="camPlaceholder">카메라 프리뷰<br><span>(권한 허용 시 실시간 영상)</span></div>
+      <div class="cam-tint"></div>
+
+      <!-- 상단: 점자블록 이탈 상태 -->
+      <div class="status-pill" id="statusPill" role="status" aria-live="polite">
+        <span class="status-pill__dot" id="statusDot"></span>
+        <span class="status-pill__text" id="statusText">연결 중…</span>
+      </div>
+
+      <!-- 연결 배지 -->
+      <div class="conn-badge" id="connBadge" title="서버 연결 상태">오프라인</div>
+
+      <!-- 감지 요약 칩 -->
+      <div class="chips" id="chips" aria-hidden="true"></div>
+
+      <!-- 하단 안내 카드 -->
+      <div class="alert-card" id="alertCard" aria-live="assertive">
+        <div class="alert-card__icon" id="alertIcon">✓</div>
+        <div class="alert-card__body">
+          <div class="alert-card__title" id="alertTitle">전방을 확인하고 있어요</div>
+          <div class="alert-card__desc" id="alertDesc">감지되면 바로 알려드릴게요</div>
+        </div>
+      </div>
+
+      <!-- 이탈 방향 화살표 -->
+      <div class="dir-hint" id="dirHint" hidden><span id="dirArrow">→</span></div>
+    </section>
+
+    <!-- ───────────── 기록 ───────────── -->
+    <section class="screen screen--light" data-screen="history" hidden>
+      <h2 class="page-title">탐지 기록</h2>
+      <div class="hist-list" id="histList">
+        <div class="hist-empty" id="histEmpty">아직 기록이 없어요.<br>보행을 시작하면 여기에 쌓여요.</div>
+      </div>
+    </section>
+
+    <!-- ───────────── 설정 ───────────── -->
+    <section class="screen screen--light" data-screen="settings" hidden>
+      <h2 class="page-title">설정</h2>
+      <div class="set-list">
+        <div class="set-row">
+          <div class="set-row__label">음성 안내</div>
+          <button class="toggle" id="tgVoice" role="switch" aria-checked="true"><span class="toggle__knob"></span></button>
+        </div>
+        <div class="set-row">
+          <div class="set-row__label">진동 안내</div>
+          <button class="toggle" id="tgHaptic" role="switch" aria-checked="true"><span class="toggle__knob"></span></button>
+        </div>
+        <div class="set-row set-row--col">
+          <div class="set-row__label">음성 속도<span class="set-row__val" id="rateVal">1.0×</span></div>
+          <input type="range" id="rate" min="0.6" max="1.8" step="0.1" value="1.0" class="slider" aria-label="음성 속도">
+        </div>
+        <div class="set-row set-row--col">
+          <div class="set-row__label">음성 볼륨<span class="set-row__val" id="volVal">100%</span></div>
+          <input type="range" id="vol" min="0" max="1" step="0.05" value="1" class="slider" aria-label="음성 볼륨">
+        </div>
+        <div class="set-row set-row--col">
+          <div class="set-row__label">감지 신뢰도 임계값<span class="set-row__val" id="confVal">60%</span></div>
+          <input type="range" id="conf" min="0.3" max="0.9" step="0.05" value="0.6" class="slider" aria-label="감지 신뢰도 임계값">
+          <p class="set-row__hint">이 값보다 확신이 낮은 감지는 "확인 필요"로 표시하고 음성으로 단정하지 않아요.</p>
+        </div>
+        <div class="set-row">
+          <div class="set-row__label">서버 연결 (끄면 Mock)</div>
+          <button class="toggle" id="tgLive" role="switch" aria-checked="false"><span class="toggle__knob"></span></button>
+        </div>
+        <div class="set-row set-row--col">
+          <div class="set-row__label">서버 주소</div>
+          <input type="text" id="wsUrl" class="text-input" spellcheck="false" autocapitalize="off">
+          <p class="set-row__hint">비워두면 현재 페이지와 같은 서버(<span id="wsAuto"></span>)로 자동 연결해요.</p>
+        </div>
+        <div class="set-row set-row--disabled">
+          <div class="set-row__label">티맵 내비 연동 <span class="badge-soon">향후 확장</span></div><div class="set-row__chev">›</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────── 탭바 ───────────── -->
+    <nav class="tabbar" id="tabbar" hidden>
+      <button class="tab" data-goto="main"><span>홈</span></button>
+      <button class="tab" data-goto="history"><span>기록</span></button>
+      <button class="tab" data-goto="settings"><span>설정</span></button>
+    </nav>
+
+  </div>
+</div>
+
+<script src="./js/labels.js"></script>
+<script src="./js/tts.js"></script>
+<script src="./js/process.js"></script>
+<script src="./js/overlay.js"></script>
+<script src="./js/ws-client.js"></script>
+<script src="./js/mock.js"></script>
+<script src="./js/camera.js"></script>
+<script src="./js/app.js"></script>
+</body>
+</html>
