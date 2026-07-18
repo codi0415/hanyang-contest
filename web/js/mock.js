@@ -29,7 +29,10 @@ const Mock = (() => {
       const cx = (b.x1 + b.x2) / 2;
       const direction = +((cx / 640) * 2 - 1).toFixed(2);
       const danger = +Math.min(1, (distance === 'near' ? 0.8 : distance === 'medium' ? 0.5 : 0.25) + hFrac * 0.3).toFixed(2);
-      obstacles.push({ label: pick(LIST), confidence: conf(0.45, 0.97), ...b, distance, direction, danger });
+      const label = pick(LIST);
+      const o = { label, confidence: conf(0.45, 0.97), ...b, distance, direction, danger };
+      if (label === '신호등') o.state = pick(['red', 'green', 'unknown']); // 백엔드 state 필드 흉내
+      obstacles.push(o);
     }
     return { frame_id: frameId, deviation, obstacles, depth_corroboration: null };
   }

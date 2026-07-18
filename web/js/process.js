@@ -14,12 +14,19 @@ const Processor = (() => {
     return 'far';
   }
 
+  // 신호등 상태 색: red/green이면 그 색, 아니면 기본
+  function signalColor(state, base) {
+    return state === 'red' ? '#ff5c5c' : state === 'green' ? '#3ddc84' : base;
+  }
+
   function process(msg, confThreshold, frameH) {
     const dets = (msg.obstacles || []).map(o => {
       const meta = metaOf(o.label);
       const below = o.confidence < confThreshold;
       const risk = o.distance ? (DEPTH_TO_RISK[o.distance] || riskOf(o.y2 - o.y1, frameH))
                               : riskOf(o.y2 - o.y1, frameH);
+      let color = below ? UNCERTAIN_COLOR : meta.color;
+      if (meta.cat === 'signal' && !below) color = signalColor(o.state, meta.color); // 신호등 색 반영
       return {
         ...o,
         cat: meta.cat,
@@ -27,16 +34,22 @@ const Processor = (() => {
         below,
         name: o.label,
         confPct: Math.round(o.confidence * 100),
-        color: below ? UNCERTAIN_COLOR : meta.color,
+        color,
         chip: meta.chip,
       };
     });
 
+    // 장애물 음성은 신호등 제외(신호등은 색 안내 전용, 별도 처리)
     const topObstacle = dets
-      .filter(d => !d.below)
+      .filter(d => !d.below && d.cat !== 'signal')
       .sort((a, b) => (RANK[b.risk] - RANK[a.risk]) || (b.confidence - a.confidence))[0] || null;
 
-    return { deviation: msg.deviation || 'normal', dets, topObstacle };
+    // 신호등(가장 신뢰도 높은 것) — state는 red|green|unknown|null
+    const traffic = dets
+      .filter(d => d.cat === 'signal' && !d.below)
+      .sort((a, b) => b.confidence - a.confidence)[0] || null;
+
+    return { deviation: msg.deviation || 'normal', dets, topObstacle, traffic };
   }
 
   return { process, riskOf };

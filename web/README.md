@@ -1,7 +1,8 @@
 # 보행 도우미 — HTML 웹 버전
 
-RN 앱과 **동일한 로직**(COCO 14종, 근접>이탈 우선순위, 장애물별 distance, 신뢰도 게이팅,
-신호등=일반 장애물)을 그대로 옮긴 웹 프론트엔드. 디자인도 동일.
+COCO 14종, 근접>이탈 우선순위, 장애물별 distance, 신뢰도 게이팅, 공간음향, 길안내를 갖춘 웹 프론트엔드. 디자인 동일.
+
+**신호등 `state` 3원칙**: `red`/`green` → 색만 안내("신호등 빨간불/초록불입니다"), `unknown`/`null` → 무음(색 언급 금지), TTS **최하위**(다른 안내 없을 때만). 칩·박스는 해당 색으로 표시. 안전상 "멈추세요/건너세요"는 안내하지 않으며 일반 장애물 경고 대상에서 제외.
 
 ## 백엔드 연동
 - WebSocket `/ws/stream` 로 JPEG 프레임(640×480, ~5fps) 전송 → JSON 수신
@@ -29,7 +30,7 @@ FastAPI가 `frontend/` 폴더를 `/`에 서빙하므로, **이 `web/` 안의 파
 - 현재 위치는 `navigator.geolocation.watchPosition()`(HTTPS 필요) 실시간 추적
 - 출발(현재 GPS)+도착으로 `/nav/route` → steps 수신 → GPS 갱신마다 **다음 step까지 haversine 거리** 계산
   → 근접 시 `description`을 음성 안내("N미터 앞 …"). 안내는 메인(카메라) 화면 배너로도 표시.
-- 음성 우선순위: 근접 장애물 > 이탈 > 군중 > **내비** > 신호등 (장애물/이탈 뜨면 내비가 양보).
+- 음성 우선순위: 근접 장애물 > 이탈 > 군중 > **내비** > 중거리 장애물 > 신호등(최하위).
 - 서버 연결(설정)이 꺼져 있으면 **Mock + GPS 시뮬레이션**으로 데모 동작.
 
 ### 백엔드 계약 (확정, js/nav.js)
@@ -63,7 +64,7 @@ web/
   index.html
   css/style.css
   js/labels.js      COCO 14종 라벨 메타
-  js/tts.js         우선순위 음성 큐 (근접>이탈>군중>내비>신호등>중거리)
+  js/tts.js         우선순위 음성 큐 (근접>이탈>군중>내비>중거리>신호등)
   js/process.js     메시지→파생 상태 (distance 우선, bbox 폴백)
   js/overlay.js     바운딩 박스 캔버스
   js/ws-client.js   WebSocket(재연결)

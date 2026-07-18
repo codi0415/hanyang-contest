@@ -99,6 +99,15 @@
     Spatial.onFrame(r.dets);   // 공간음향: 가장 위험한 장애물 방향 비프 (이어폰+토글 시)
     updateDeviation(r.deviation);
     updateAlertAndVoice(r.deviation, r.topObstacle, r.dets.length);
+    updateTraffic(r.traffic);
+  }
+
+  // 신호등: state 3원칙 — unknown/null 무음(색 언급 금지) · red/green 색만 · TTS 최하위
+  function updateTraffic(t) {
+    if (!t) return;
+    if (t.state === 'red') TTS.announce('traffic', '신호등 빨간불입니다.');
+    else if (t.state === 'green') TTS.announce('traffic', '신호등 초록불입니다.');
+    // 'unknown' | null → 아무 안내도 하지 않음
   }
 
   function updateDeviation(dev) {
