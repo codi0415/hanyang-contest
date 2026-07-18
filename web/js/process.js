@@ -35,7 +35,6 @@ const Processor = (() => {
         name: o.label,
         confPct: Math.round(o.confidence * 100),
         color,
-        chip: meta.chip,
       };
     });
 

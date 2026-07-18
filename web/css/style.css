@@ -70,7 +70,7 @@ body{font-family:var(--font);background:#111;color:#fff;-webkit-font-smoothing:a
   padding:8px 12px;border-radius:999px;background:rgba(255,179,71,.32);border:1px solid rgba(255,255,255,.32);
   box-shadow:0 4px 20px rgba(0,0,0,.22);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%)}
 .crowd-pill--high{background:rgba(255,92,92,.36)}
-.crowd-pill__icon{font-size:13px;line-height:1}
+.crowd-pill__dot{width:7px;height:7px;border-radius:50%;background:#fff;box-shadow:0 0 6px rgba(255,255,255,.85)}
 .crowd-pill__text{font:700 12px var(--font);color:#fff;white-space:nowrap}
 
 .chips{position:absolute;left:16px;right:16px;bottom:190px;z-index:5;display:flex;gap:8px;overflow-x:auto}
@@ -79,7 +79,6 @@ body{font-family:var(--font);background:#111;color:#fff;-webkit-font-smoothing:a
   padding:7px 12px;border-radius:999px;font:700 12px var(--font);color:#fff;
   background:rgba(0,0,0,.42);border:1px solid var(--c,rgba(255,255,255,.4));box-shadow:0 0 14px -6px var(--c,#fff);
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-.chip__i{font-size:13px;line-height:1}
 .chip--dim{opacity:.6;border-style:dashed}
 
 .alert-card{position:absolute;left:16px;right:16px;bottom:96px;z-index:5;padding:18px 20px;border-radius:26px;
@@ -116,8 +115,8 @@ body{font-family:var(--font);background:#111;color:#fff;-webkit-font-smoothing:a
 .nav-search{display:flex;gap:10px;align-items:center}
 .nav-input{flex:1}
 .mic-btn{width:48px;height:46px;flex-shrink:0;border-radius:14px;border:1px solid rgba(58,36,22,.15);
-  background:rgba(255,255,255,.7);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.mic-btn--on{background:linear-gradient(135deg,#ff7a59,#ffb347);border-color:transparent;animation:micPulse 1s infinite}
+  background:rgba(255,255,255,.7);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.mic-btn--on{background:linear-gradient(135deg,#ff7a59,#ffb347);border-color:transparent;color:#fff;animation:micPulse 1s infinite}
 @keyframes micPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,122,89,.5)}50%{box-shadow:0 0 0 10px rgba(255,122,89,0)}}
 .nav-search-btn{width:100%;margin-top:12px;padding:15px;border-radius:16px;border:none;cursor:pointer;
   background:linear-gradient(135deg,#ff7a59,#ffb347);color:#fff;font:800 16px var(--font);box-shadow:0 8px 20px rgba(255,122,89,.35)}

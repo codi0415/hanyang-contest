@@ -39,7 +39,7 @@
 
       <!-- 혼잡(군중) 표시 (medium/high일 때만) -->
       <div class="crowd-pill" id="crowdPill" role="status" aria-live="polite" hidden>
-        <span class="crowd-pill__icon">👥</span>
+        <span class="crowd-pill__dot"></span>
         <span class="crowd-pill__text" id="crowdText">사람 많음</span>
       </div>
 
@@ -75,7 +75,9 @@
       <div class="nav-setup" id="navSetup">
         <div class="nav-search">
           <input type="text" id="navQuery" class="text-input nav-input" placeholder="목적지를 입력하세요 (예: 왕십리역)" autocapitalize="off" autocomplete="off">
-          <button class="mic-btn" id="micBtn" aria-label="음성으로 목적지 입력">🎤</button>
+          <button class="mic-btn" id="micBtn" aria-label="음성으로 목적지 입력">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/></svg>
+          </button>
         </div>
         <button class="nav-search-btn" id="navSearchBtn">목적지 검색</button>
         <p class="nav-status" id="navStatus"></p>

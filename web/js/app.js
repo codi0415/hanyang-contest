@@ -148,7 +148,7 @@
       const near = top.risk === 'near';
       alertCard.classList.remove('alert-card--warn', 'alert-card--danger');
       alertCard.classList.add(near ? 'alert-card--danger' : 'alert-card--warn');
-      alertIcon.textContent = near ? '!' : (top.chip || '▲');
+      alertIcon.textContent = near ? '!' : '△';
       alertTitle.textContent = `전방에 ${top.name}${near ? '이(가) 가까이' : ''} 있어요`;
       const distNote = top.distance ? '' : ' (추정 거리)';
       alertDesc.textContent = `${RISK_KO[top.risk]} · 신뢰도 ${top.confPct}%${distNote}`;
@@ -181,9 +181,7 @@
       const el = document.createElement('div');
       el.className = 'chip' + (muted ? ' chip--dim' : '');
       el.style.setProperty('--c', d.color);
-      const i = document.createElement('span'); i.className = 'chip__i'; i.textContent = d.chip;
-      const t = document.createElement('span'); t.textContent = d.name + (n > 1 ? ` ×${n}` : '');
-      el.append(i, t);
+      el.textContent = d.name + (n > 1 ? ` ×${n}` : '');
       chips.appendChild(el);
     }
   }
@@ -375,8 +373,8 @@
     if (!settings.spatial) { spatialStatus.hidden = true; return; }
     spatialStatus.hidden = false;
     spatialStatus.classList.remove('spatial-status--ok', 'spatial-status--warn');
-    if (earState === 'connected') { spatialStatus.classList.add('spatial-status--ok'); spatialStatus.textContent = '🎧 이어폰 감지됨 · 작동 중'; }
-    else if (settings.earManual) { spatialStatus.classList.add('spatial-status--ok'); spatialStatus.textContent = '🎧 이어폰 착용(수동) · 작동 중'; }
+    if (earState === 'connected') { spatialStatus.classList.add('spatial-status--ok'); spatialStatus.textContent = '이어폰 감지됨 · 작동 중'; }
+    else if (settings.earManual) { spatialStatus.classList.add('spatial-status--ok'); spatialStatus.textContent = '이어폰 착용(수동) · 작동 중'; }
     else if (earState === 'speaker') { spatialStatus.classList.add('spatial-status--warn'); spatialStatus.textContent = '이어폰을 연결하면 시작돼요 (현재 스피커 출력)'; }
     else { spatialStatus.classList.add('spatial-status--warn'); spatialStatus.textContent = '이어폰 자동 감지 불가 — 아래 “이어폰 착용 중”을 켜세요'; }
   }
