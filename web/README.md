@@ -32,13 +32,18 @@ FastAPI가 `frontend/` 폴더를 `/`에 서빙하므로, **이 `web/` 안의 파
 - 음성 우선순위: 근접 장애물 > 이탈 > 군중 > **내비** > 신호등 (장애물/이탈 뜨면 내비가 양보).
 - 서버 연결(설정)이 꺼져 있으면 **Mock + GPS 시뮬레이션**으로 데모 동작.
 
-> ⚠️ `/nav/search`·`/nav/route` 응답 스키마는 **가정값**으로 구현(배열/래핑 모두 수용).
-> 실제 계약 확정되면 `js/nav.js`의 fetch/parse만 맞추면 됩니다. (아래 "백엔드 확인 필요" 참고)
-
-### 백엔드 확인 필요 (js/nav.js 상단 주석에도 명시)
-- `/nav/search` 요청/응답 필드명 (특히 좌표 `lat`/`lng`)
-- `/nav/route` 응답의 **각 step에 좌표(lat/lng) 포함 여부** ← 안내 트리거에 필수
-- `distance` 단위/의미(이전 step 대비 m?), 좌표계 WGS84 여부, `/nav/*` same-origin 여부
+### 백엔드 계약 (확정, js/nav.js)
+```
+GET  /nav/search?q=<검색어>
+     → { results: [ { name, address, lat, lng } ] }            // 좌표 lat/lng, WGS84
+POST /nav/route  { start:{lat,lng}, dest:{lat,lng}, startName?, destName? }
+     → { totalDistance, totalTime, destination:{lat,lng},
+         steps:[ { description, turnType, lat, lng, distanceFromPrev } ] }
+```
+- step.lat/lng = 안내 실행 지점(maneuver), `distanceFromPrev` = 이전 step→이 step 구간(m)
+- `description` = 완결된 한글 안내(그대로 읽음), `turnType` = 화살표 보조(11직진·12좌·13우·211/212횡단보도·200출발·201도착)
+- `/nav/*` same-origin(8443)이라 상대경로 fetch 그대로. CORS도 열려 있어 타 오리진도 OK
+- 백엔드 stateless → **경로 이탈 시 프론트가 현재 GPS를 start로 `/nav/route` 재호출**(nav.js에 reroute 구현됨)
 
 ## 구조
 ```

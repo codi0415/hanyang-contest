@@ -231,11 +231,15 @@
     navActiveMeta = $('navActiveMeta'), navSteps = $('navSteps'), navStopBtn = $('navStopBtn'), micBtn = $('micBtn');
 
   const fmtDist = (m) => (m >= 1000 ? (m / 1000).toFixed(1) + 'km' : Math.max(0, Math.round(m)) + 'm');
-  function arrowFor(desc) {
-    if (/좌회전/.test(desc)) return '↰';
-    if (/우회전/.test(desc)) return '↱';
-    if (/횡단보도/.test(desc)) return '⇥';
-    if (/도착/.test(desc)) return '★';
+  // turnType(백엔드): 11직진·12좌·13우·211/212횡단보도·200출발·201도착
+  const TURN_ARROW = { 11: '↑', 12: '↰', 13: '↱', 211: '⇥', 212: '⇥', 200: '◉', 201: '★' };
+  function arrowFor(step) {
+    if (step && step.turnType != null && TURN_ARROW[step.turnType]) return TURN_ARROW[step.turnType];
+    const d = step ? step.description || '' : '';
+    if (/좌회전/.test(d)) return '↰';
+    if (/우회전/.test(d)) return '↱';
+    if (/횡단보도/.test(d)) return '⇥';
+    if (/도착/.test(d)) return '★';
     return '↑';
   }
 
@@ -289,7 +293,7 @@
       el.innerHTML = '<div class="nav-step__idx"></div><div class="nav-step__txt"></div><div class="nav-step__dist"></div>';
       el.querySelector('.nav-step__idx').textContent = i + 1;
       el.querySelector('.nav-step__txt').textContent = s.description;
-      el.querySelector('.nav-step__dist').textContent = s.distance != null ? fmtDist(s.distance) : '';
+      el.querySelector('.nav-step__dist').textContent = s.distanceFromPrev != null ? fmtDist(s.distanceFromPrev) : '';
       navSteps.appendChild(el);
     });
   }
@@ -299,7 +303,7 @@
     navSetup.hidden = on; navActive.hidden = !on;
     if (s.active && s.nextStep) {
       navBanner.hidden = false;
-      navBannerArrow.textContent = arrowFor(s.nextStep.description);
+      navBannerArrow.textContent = arrowFor(s.nextStep);
       navBannerDesc.textContent = s.nextStep.description;
       navBannerDist.textContent = fmtDist(s.distToNext);
       navBannerRemain.textContent = fmtDist(s.remaining);
@@ -314,7 +318,7 @@
     if (on) {
       navActiveDest.textContent = s.dest ? s.dest.name : '';
       navActiveMeta.textContent = s.arrived ? '도착 완료'
-        : `다음: ${s.nextStep ? s.nextStep.description : ''} · ${fmtDist(s.distToNext)}`;
+        : `총 ${fmtDist(s.total)} · 약 ${Math.max(1, Math.round(s.totalTime / 60))}분 · 다음 ${fmtDist(s.distToNext)}`;
       renderNavSteps(s.steps, s.idx, s.arrived);
     }
   });
