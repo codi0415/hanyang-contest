@@ -1,13 +1,16 @@
 /*
- * tts.js — 음성 안내 우선순위 큐 (Web Speech API). RN announcementQueue.ts와 동일.
- * 우선순위(숫자 클수록 우선) — 확정 정책: 근접 장애물 > 점자블록 이탈:
- *   3 근접 장애물 (즉시 새치기)
- *   2 점자블록 이탈
+ * tts.js — 음성 안내 우선순위 큐 (Web Speech API).
+ * 우선순위(숫자 클수록 우선): 근접 장애물 > 이탈 > 군중 > 내비 > 신호등 > 중거리 장애물
+ *   5 근접 장애물 (즉시 새치기)
+ *   4 점자블록 이탈
+ *   3 군중(2단계, 예약)
+ *   2 길안내(내비)
  *   1 신호등(향후 색상 기능용)
  *   0 중거리 장애물 / 기타
+ * 앞에 장애물/이탈이 뜨면 내비 안내는 자연히 양보(새치기 당함).
  */
 const TTS = (() => {
-  const PRIORITY = { obstacleNear: 3, deviation: 2, traffic: 1, obstacleMid: 0, info: 0 };
+  const PRIORITY = { obstacleNear: 5, deviation: 4, crowd: 3, nav: 2, traffic: 1, obstacleMid: 0, info: 0 };
   const synth = window.speechSynthesis;
   const supported = !!synth;
 

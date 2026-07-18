@@ -42,7 +42,7 @@
   function show(name) {
     for (const s of screens) s.hidden = s.dataset.screen !== name;
     tabbar.hidden = name === 'onboarding';
-    tabbar.classList.toggle('tabbar--light', name === 'history' || name === 'settings');
+    tabbar.classList.toggle('tabbar--light', name === 'history' || name === 'settings' || name === 'nav');
     for (const t of tabs) t.classList.toggle('tab--active', t.dataset.goto === name);
     if (name === 'history') renderHistory();
   }
@@ -206,6 +206,7 @@
   bindToggle('tgVoice', 'voice', (on) => TTS.setEnabled(on));
   bindToggle('tgHaptic', 'haptic');
   bindToggle('tgLive', 'live', (on) => {
+    Nav.setLive(on);
     if (!started) return;
     if (on) startLive(Camera.active); else startMock();
   });
@@ -221,6 +222,104 @@
     settings.wsUrl = wsUrl.value.trim();
     if (started && source === 'live') startLive(Camera.active);
   });
+
+  // ─────────── 길안내 ───────────
+  const navBanner = $('navBanner'), navBannerArrow = $('navBannerArrow'), navBannerDesc = $('navBannerDesc'),
+    navBannerDist = $('navBannerDist'), navBannerRemain = $('navBannerRemain');
+  const navQuery = $('navQuery'), navSearchBtn = $('navSearchBtn'), navResults = $('navResults'), navStatus = $('navStatus');
+  const navSetup = $('navSetup'), navActive = $('navActive'), navActiveDest = $('navActiveDest'),
+    navActiveMeta = $('navActiveMeta'), navSteps = $('navSteps'), navStopBtn = $('navStopBtn'), micBtn = $('micBtn');
+
+  const fmtDist = (m) => (m >= 1000 ? (m / 1000).toFixed(1) + 'km' : Math.max(0, Math.round(m)) + 'm');
+  function arrowFor(desc) {
+    if (/좌회전/.test(desc)) return '↰';
+    if (/우회전/.test(desc)) return '↱';
+    if (/횡단보도/.test(desc)) return '⇥';
+    if (/도착/.test(desc)) return '★';
+    return '↑';
+  }
+
+  async function doNavSearch() {
+    const q = navQuery.value.trim();
+    if (!q) { navStatus.textContent = '목적지를 입력해 주세요.'; return; }
+    navStatus.textContent = '검색 중…'; navResults.innerHTML = '';
+    try {
+      const list = await Nav.search(q);
+      navStatus.textContent = list.length ? '' : '검색 결과가 없어요.';
+      for (const c of list) {
+        const el = document.createElement('button');
+        el.className = 'nav-result';
+        el.innerHTML = '<div class="nav-result__name"></div><div class="nav-result__addr"></div>';
+        el.querySelector('.nav-result__name').textContent = c.name || '(이름 없음)';
+        el.querySelector('.nav-result__addr').textContent = c.address || '';
+        el.addEventListener('click', () => selectDest(c));
+        navResults.appendChild(el);
+      }
+    } catch (e) { navStatus.textContent = '검색 오류: ' + e.message; }
+  }
+
+  async function selectDest(c) {
+    navStatus.textContent = `"${c.name}" 경로를 준비 중…`;
+    try { await Nav.startTo(c); show('main'); }
+    catch (e) { navStatus.textContent = '경로 오류: ' + e.message; }
+  }
+
+  navSearchBtn.addEventListener('click', doNavSearch);
+  navQuery.addEventListener('keydown', (e) => { if (e.key === 'Enter') doNavSearch(); });
+  navStopBtn.addEventListener('click', () => Nav.stop());
+
+  // 음성 입력(보조) — iOS Safari STT는 불안정하므로 실패 시 텍스트 안내
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  micBtn.addEventListener('click', () => {
+    if (!SR) { navStatus.textContent = '이 브라우저는 음성 입력을 지원하지 않아요. 텍스트로 입력해 주세요.'; return; }
+    const rec = new SR();
+    rec.lang = 'ko-KR'; rec.interimResults = false; rec.maxAlternatives = 1;
+    micBtn.classList.add('mic-btn--on'); navStatus.textContent = '듣고 있어요…';
+    rec.onresult = (e) => { navQuery.value = e.results[0][0].transcript; doNavSearch(); };
+    rec.onerror = () => { navStatus.textContent = '음성 인식 실패. 텍스트로 입력해 주세요.'; };
+    rec.onend = () => micBtn.classList.remove('mic-btn--on');
+    try { rec.start(); } catch { micBtn.classList.remove('mic-btn--on'); }
+  });
+
+  function renderNavSteps(steps, idx, arrived) {
+    navSteps.innerHTML = '';
+    steps.forEach((s, i) => {
+      const el = document.createElement('div');
+      el.className = 'nav-step ' + (arrived || i < idx ? 'nav-step--done' : i === idx ? 'nav-step--current' : '');
+      el.innerHTML = '<div class="nav-step__idx"></div><div class="nav-step__txt"></div><div class="nav-step__dist"></div>';
+      el.querySelector('.nav-step__idx').textContent = i + 1;
+      el.querySelector('.nav-step__txt').textContent = s.description;
+      el.querySelector('.nav-step__dist').textContent = s.distance != null ? fmtDist(s.distance) : '';
+      navSteps.appendChild(el);
+    });
+  }
+
+  Nav.setOnUpdate((s) => {
+    const on = s.active || s.arrived;
+    navSetup.hidden = on; navActive.hidden = !on;
+    if (s.active && s.nextStep) {
+      navBanner.hidden = false;
+      navBannerArrow.textContent = arrowFor(s.nextStep.description);
+      navBannerDesc.textContent = s.nextStep.description;
+      navBannerDist.textContent = fmtDist(s.distToNext);
+      navBannerRemain.textContent = fmtDist(s.remaining);
+    } else if (s.arrived) {
+      navBanner.hidden = false;
+      navBannerArrow.textContent = '★';
+      navBannerDesc.textContent = '목적지에 도착했어요';
+      navBannerDist.textContent = '도착'; navBannerRemain.textContent = '0m';
+    } else {
+      navBanner.hidden = true;
+    }
+    if (on) {
+      navActiveDest.textContent = s.dest ? s.dest.name : '';
+      navActiveMeta.textContent = s.arrived ? '도착 완료'
+        : `다음: ${s.nextStep ? s.nextStep.description : ''} · ${fmtDist(s.distToNext)}`;
+      renderNavSteps(s.steps, s.idx, s.arrived);
+    }
+  });
+
+  Nav.setLive(settings.live);
 
   $('wsAuto').textContent = AUTO_URL;
   TTS.setRate(settings.rate); TTS.setVolume(settings.volume); TTS.setEnabled(settings.voice);

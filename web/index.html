@@ -36,6 +36,15 @@
       <!-- 연결 배지 -->
       <div class="conn-badge" id="connBadge" title="서버 연결 상태">오프라인</div>
 
+      <!-- 길안내 배너 (안내 중일 때만) -->
+      <div class="nav-banner glass" id="navBanner" role="status" aria-live="polite" hidden>
+        <div class="nav-banner__arrow" id="navBannerArrow">↑</div>
+        <div class="nav-banner__body">
+          <div class="nav-banner__desc" id="navBannerDesc">경로 안내 중</div>
+          <div class="nav-banner__sub"><span id="navBannerDist">—</span> · <span id="navBannerRemain">—</span> 남음</div>
+        </div>
+      </div>
+
       <!-- 감지 요약 칩 -->
       <div class="chips" id="chips" aria-hidden="true"></div>
 
@@ -50,6 +59,31 @@
 
       <!-- 이탈 방향 화살표 -->
       <div class="dir-hint" id="dirHint" hidden><span id="dirArrow">→</span></div>
+    </section>
+
+    <!-- ───────────── 길안내 ───────────── -->
+    <section class="screen screen--light" data-screen="nav" hidden>
+      <h2 class="page-title">길 안내</h2>
+
+      <div class="nav-setup" id="navSetup">
+        <div class="nav-search">
+          <input type="text" id="navQuery" class="text-input nav-input" placeholder="목적지를 입력하세요 (예: 왕십리역)" autocapitalize="off" autocomplete="off">
+          <button class="mic-btn" id="micBtn" aria-label="음성으로 목적지 입력">🎤</button>
+        </div>
+        <button class="nav-search-btn" id="navSearchBtn">목적지 검색</button>
+        <p class="nav-status" id="navStatus"></p>
+        <div class="nav-results" id="navResults"></div>
+      </div>
+
+      <div class="nav-active" id="navActive" hidden>
+        <div class="nav-active__card">
+          <div class="nav-active__label">안내 중</div>
+          <div class="nav-active__dest" id="navActiveDest"></div>
+          <div class="nav-active__meta" id="navActiveMeta"></div>
+        </div>
+        <div class="nav-steps" id="navSteps"></div>
+        <button class="nav-stop-btn" id="navStopBtn">안내 중지</button>
+      </div>
     </section>
 
     <!-- ───────────── 기록 ───────────── -->
@@ -103,6 +137,7 @@
     <!-- ───────────── 탭바 ───────────── -->
     <nav class="tabbar" id="tabbar" hidden>
       <button class="tab" data-goto="main"><span>홈</span></button>
+      <button class="tab" data-goto="nav"><span>길안내</span></button>
       <button class="tab" data-goto="history"><span>기록</span></button>
       <button class="tab" data-goto="settings"><span>설정</span></button>
     </nav>
@@ -117,6 +152,7 @@
 <script src="./js/ws-client.js"></script>
 <script src="./js/mock.js"></script>
 <script src="./js/camera.js"></script>
+<script src="./js/nav.js"></script>
 <script src="./js/app.js"></script>
 </body>
 </html>
