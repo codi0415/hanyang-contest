@@ -284,6 +284,7 @@
   navSearchBtn.addEventListener('click', doNavSearch);
   navQuery.addEventListener('keydown', (e) => { if (e.key === 'Enter') doNavSearch(); });
   navStopBtn.addEventListener('click', () => Nav.stop());
+  $('tmapRow').addEventListener('click', () => show('nav')); // 설정의 티맵 경로 안내 → 길안내
 
   // 음성 입력(보조) — iOS Safari STT는 불안정하므로 실패 시 텍스트 안내
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;

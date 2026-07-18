@@ -14,7 +14,8 @@
     <!-- ───────────── 온보딩 ───────────── -->
     <section class="screen screen--onboarding" data-screen="onboarding">
       <div class="ob-logo"><div class="ob-logo__dot"></div></div>
-      <h1 class="ob-title">가는 길을 더 안전하게</h1>
+      <h1 class="ob-title">LUCE</h1>
+      <p class="ob-tagline">가는 길을 더 안전하게</p>
       <p class="ob-sub">카메라로 앞길의 장애물과 점자블록을 감지하고<br>음성과 진동으로 미리 알려드려요</p>
       <button class="ob-start" id="startBtn">시작하기</button>
       <p class="ob-note">시작하면 카메라 접근 권한을 요청해요</p>
@@ -141,8 +142,8 @@
           <input type="text" id="wsUrl" class="text-input" spellcheck="false" autocapitalize="off">
           <p class="set-row__hint">비워두면 현재 페이지와 같은 서버(<span id="wsAuto"></span>)로 자동 연결해요.</p>
         </div>
-        <div class="set-row set-row--disabled">
-          <div class="set-row__label">티맵 내비 연동 <span class="badge-soon">향후 확장</span></div><div class="set-row__chev">›</div>
+        <div class="set-row set-row--link" id="tmapRow">
+          <div class="set-row__label">티맵 경로 안내 <span class="badge-on">연결됨</span></div><div class="set-row__chev">›</div>
         </div>
       </div>
     </section>
