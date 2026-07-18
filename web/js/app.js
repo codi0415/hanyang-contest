@@ -105,14 +105,18 @@
   }
 
   // 혼잡(군중): null 침묵 / medium·high만 안내(우선순위 crowd). UI는 상단 혼잡 pill로 표시.
+  // flow(v2): approaching만 문구 변경·강조, 나머지는 밀도 문구 유지(보수적).
   function updateCrowd(c) {
     const on = c && (c.density === 'medium' || c.density === 'high');
     crowdPill.hidden = !on;
     if (!on) return;
     const high = c.density === 'high';
-    crowdPill.classList.toggle('crowd-pill--high', high);
-    crowdText.textContent = high ? '주변 혼잡' : '사람 많음';
-    TTS.announce('crowd', high ? '주변에 사람이 많습니다. 주의하세요.' : '주변에 사람이 조금 많습니다.');
+    const approaching = c.flow === 'approaching';
+    crowdPill.classList.toggle('crowd-pill--high', high || approaching); // 다가오면 더 강조
+    crowdText.textContent = approaching ? '사람 다가옴' : (high ? '주변 혼잡' : '사람 많음');
+    if (approaching) TTS.announce('crowd', '사람들이 다가오고 있어요. 주의하세요.');
+    else if (high) TTS.announce('crowd', '주변에 사람이 많습니다.');
+    else TTS.announce('crowd', '주변에 사람이 조금 많습니다.');
   }
 
   // 신호등: state 3원칙 — unknown/null 무음(색 언급 금지) · red/green 색만 · TTS 최하위

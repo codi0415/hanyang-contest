@@ -40,7 +40,8 @@ const Mock = (() => {
     let crowd = null;
     if (Math.random() < 0.25) {
       const density = Math.random() < 0.4 ? 'high' : 'medium';
-      crowd = { density, flow: null, confidence: +(0.6 + Math.random() * 0.35).toFixed(2), count: rand(6, 25) };
+      const flow = pick(['approaching', 'passing', 'stationary', null]); // v2 흐름(가끔 approaching)
+      crowd = { density, flow, confidence: +(0.6 + Math.random() * 0.35).toFixed(2), count: rand(6, 25) };
     }
     return { frame_id: frameId, deviation, obstacles, depth_corroboration: null, crowd };
   }
