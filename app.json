@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "보행 도우미",
+    "slug": "walkassist",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "walkassist",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.walkassist.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "앞길의 장애물과 점자블록을 감지하기 위해 카메라를 사용합니다.",
+        "UIBackgroundModes": ["audio"]
+      }
+    },
+    "android": {
+      "package": "com.walkassist.app",
+      "permissions": ["android.permission.CAMERA", "android.permission.VIBRATE"]
+    },
+    "plugins": [
+      [
+        "react-native-vision-camera",
+        {
+          "cameraPermissionText": "앞길의 장애물과 점자블록을 감지하기 위해 카메라를 사용합니다."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": { "deploymentTarget": "15.1" },
+          "android": { "minSdkVersion": 26 }
+        }
+      ]
+    ]
+  }
+}

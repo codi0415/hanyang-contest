@@ -1,0 +1,32 @@
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native projects (config-plugin으로 `npx expo prebuild` 시 재생성됨)
+/ios/
+/android/
+
+# Metro
+.metro-health-check*
+
+# debug / logs
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env
+.env*.local
+
+# IDE
+.vscode/
+.idea/
