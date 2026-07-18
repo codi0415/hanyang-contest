@@ -32,6 +32,8 @@ const Mock = (() => {
       const label = pick(LIST);
       const o = { label, confidence: conf(0.45, 0.97), ...b, distance, direction, danger };
       if (label === '신호등') o.state = pick(['red', 'green', 'unknown']); // 백엔드 state 필드 흉내
+      // relevant: 원거리·저위험은 false(감지만, 경고 안 함), 가끔 null(구버전 호환)
+      o.relevant = Math.random() < 0.12 ? null : (danger < 0.32 || Math.abs(direction) > 0.85 ? false : true);
       obstacles.push(o);
     }
     return { frame_id: frameId, deviation, obstacles, depth_corroboration: null };

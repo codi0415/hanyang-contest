@@ -39,9 +39,9 @@ const Processor = (() => {
       };
     });
 
-    // 장애물 음성은 신호등 제외(신호등은 색 안내 전용, 별도 처리)
+    // 장애물 음성은 신호등 제외(색 안내 전용) + relevant===false(차도차량·원거리 등) 제외 (null은 통과)
     const topObstacle = dets
-      .filter(d => !d.below && d.cat !== 'signal')
+      .filter(d => !d.below && d.cat !== 'signal' && d.relevant !== false)
       .sort((a, b) => (RANK[b.risk] - RANK[a.risk]) || (b.confidence - a.confidence))[0] || null;
 
     // 신호등(가장 신뢰도 높은 것) — state는 red|green|unknown|null

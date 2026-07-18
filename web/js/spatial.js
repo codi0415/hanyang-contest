@@ -38,7 +38,7 @@ const Spatial = (() => {
   // 매 서버 프레임: below(저신뢰) 제외, danger 최대 1개만
   function onFrame(dets) {
     if (!active()) { target = null; return; }
-    target = (dets || []).filter((o) => !o.below && o.danger != null)
+    target = (dets || []).filter((o) => !o.below && o.danger != null && o.relevant !== false)
       .sort((a, b) => b.danger - a.danger)[0] || null;
   }
 

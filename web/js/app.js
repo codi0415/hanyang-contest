@@ -158,14 +158,15 @@
   function renderChips(dets) {
     const groups = new Map();
     for (const d of dets) {
-      const key = d.name + '|' + (d.below ? 'x' : 'o');
-      if (!groups.has(key)) groups.set(key, { d, n: 0 });
+      const muted = d.below || d.relevant === false;
+      const key = d.name + '|' + (muted ? 'x' : 'o');
+      if (!groups.has(key)) groups.set(key, { d, n: 0, muted });
       groups.get(key).n++;
     }
     chips.innerHTML = '';
-    for (const { d, n } of groups.values()) {
+    for (const { d, n, muted } of groups.values()) {
       const el = document.createElement('div');
-      el.className = 'chip' + (d.below ? ' chip--dim' : '');
+      el.className = 'chip' + (muted ? ' chip--dim' : '');
       el.style.setProperty('--c', d.color);
       const i = document.createElement('span'); i.className = 'chip__i'; i.textContent = d.chip;
       const t = document.createElement('span'); t.textContent = d.name + (n > 1 ? ` ×${n}` : '');

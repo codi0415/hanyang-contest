@@ -30,7 +30,9 @@ const Overlay = (() => {
     for (const d of dets) {
       const c = d.color;
       const w = d.x2 - d.x1, h = d.y2 - d.y1;
-      const glow = !d.below && d.risk === 'near';
+      const muted = d.relevant === false && !d.below; // 감지했지만 경고 대상 아님 → 흐리게
+      const glow = !d.below && !muted && d.risk === 'near';
+      ctx.globalAlpha = muted ? 0.4 : 1;
 
       ctx.lineWidth = glow ? 4 : 3;
       ctx.strokeStyle = c;
@@ -51,6 +53,7 @@ const Overlay = (() => {
       ctx.fill();
       ctx.fillStyle = '#141210';
       ctx.fillText(label, lx + 8, ly - 7);
+      ctx.globalAlpha = 1;
     }
   }
 
