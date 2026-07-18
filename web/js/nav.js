@@ -68,12 +68,13 @@ const MockNav = (() => {
 })();
 
 const Nav = (() => {
-  const ARRIVE = 20, APPROACH = 60, OFFROUTE = 45; // meters
+  const ARRIVE = 20, APPROACH = 60, OFFROUTE = 45, PASSED_NEAR = 35, PASSED_MARGIN = 10; // meters
   const st = {
     active: false, live: false, steps: [], idx: 0, dest: null, pos: null,
     distToNext: 0, remaining: 0, total: 0, totalTime: 0, arrived: false,
-    routePoints: [], rerouting: false, offCount: 0,
+    routePoints: [], routePath: [], rerouting: false, offCount: 0,
   };
+  let minDistToStep = Infinity; // 현재 스텝 최근접 거리(스텝 바뀌면 리셋)
   const announced = new Set();
   let onUpdate = () => {};
   let watchId = null, simTimer = null;
@@ -110,15 +111,16 @@ const Nav = (() => {
     const d = await r.json();
     if (Array.isArray(d)) {
       const last = d[d.length - 1];
-      return { steps: d, destination: last ? { lat: last.lat, lng: last.lng } : null, totalDistance: 0, totalTime: 0 };
+      return { steps: d, destination: last ? { lat: last.lat, lng: last.lng } : null, totalDistance: 0, totalTime: 0, path: [] };
     }
-    return { steps: d.steps || [], destination: d.destination || null, totalDistance: d.totalDistance || 0, totalTime: d.totalTime || 0 };
+    return { steps: d.steps || [], destination: d.destination || null, totalDistance: d.totalDistance || 0, totalTime: d.totalTime || 0, path: d.path || [] };
   }
 
   function applyRoute(start, r) {
-    st.steps = r.steps; st.idx = 0; announced.clear();
+    st.steps = r.steps; st.idx = 0; announced.clear(); minDistToStep = Infinity;
     st.total = r.totalDistance || 0; st.totalTime = r.totalTime || 0;
     st.routePoints = [{ lat: start.lat, lng: start.lng }, ...r.steps.map((s) => ({ lat: s.lat, lng: s.lng }))];
+    st.routePath = (r.path && r.path.length) ? r.path : st.routePoints; // 도로 폴리라인 있으면 그걸로
   }
 
   async function startTo(cand) {
@@ -176,9 +178,13 @@ const Nav = (() => {
     const step = st.steps[st.idx];
     const d = haversine(st.pos, step);
     st.distToNext = d;
-    if (d < ARRIVE) {
+    minDistToStep = Math.min(minDistToStep, d);
+    const arrived = d < ARRIVE;
+    // 통과 감지: 가까이 갔다가(최근접<35m) 다시 멀어짐 → 놓쳐도 다음 스텝으로 진행
+    const passed = minDistToStep < PASSED_NEAR && d > minDistToStep + PASSED_MARGIN;
+    if (arrived || passed) {
       TTS.announce('nav', step.description);
-      st.idx++;
+      st.idx++; minDistToStep = Infinity;
       if (st.idx >= st.steps.length) finish();
     } else if (d < APPROACH && !announced.has(st.idx)) {
       announced.add(st.idx);
@@ -188,10 +194,11 @@ const Nav = (() => {
 
   // 경로 이탈 감지 → 현재 GPS를 start로 재경로 요청 (백엔드 stateless)
   function checkOffRoute() {
-    if (!st.active || st.rerouting || st.idx >= st.steps.length || st.routePoints.length < 2) return;
+    const path = st.routePath;
+    if (!st.active || st.rerouting || !path || path.length < 2) return;
     let minD = Infinity;
-    for (let i = st.idx; i < st.routePoints.length - 1; i++) {
-      minD = Math.min(minD, pointSegDist(st.pos, st.routePoints[i], st.routePoints[i + 1]));
+    for (let i = 0; i < path.length - 1; i++) {
+      minD = Math.min(minD, pointSegDist(st.pos, path[i], path[i + 1]));
     }
     if (minD > OFFROUTE) {
       st.offCount++;
