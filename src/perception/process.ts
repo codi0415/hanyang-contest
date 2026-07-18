@@ -1,6 +1,6 @@
 import { Detection, Risk, ServerMessage } from '../types';
-import { CAT, colors } from '../theme';
-import { classify, displayName } from './classify';
+import { colors } from '../theme';
+import { metaOf } from './classify';
 
 const FRAME_H = 480; // 위험도 추정 기준 높이 (mock/다운스케일 프레임과 동일)
 
@@ -14,43 +14,48 @@ export function riskOf(hPx: number, frameH: number): Risk {
 
 const RANK: Record<Risk, number> = { near: 3, mid: 2, far: 1 };
 
+// 백엔드 depth_corroboration(near/medium/far) → 프론트 위험도
+const DEPTH_TO_RISK: Record<string, Risk> = { near: 'near', medium: 'mid', far: 'far' };
+
 export interface Processed {
   deviation: ServerMessage['deviation'];
   dets: Detection[];
-  traffic: Detection | null;
   topObstacle: Detection | null;
 }
 
 // 서버 메시지 → 화면에 필요한 파생 데이터 일괄 계산.
 export function process(msg: ServerMessage, confThreshold: number, frameH: number): Processed {
   const dets: Detection[] = (msg.obstacles ?? []).map((o) => {
-    const { cat, sub } = classify(o);
-    const meta = CAT[cat];
-    const risk = riskOf(o.y2 - o.y1, frameH);
+    const meta = metaOf(o);
     const below = o.confidence < confThreshold;
-    const name = displayName(cat, sub);
-    const confPct = Math.round(o.confidence * 100);
     return {
       ...o,
-      cat,
-      sub,
-      kind: meta.kind,
-      risk,
+      cat: meta.cat,
+      risk: riskOf(o.y2 - o.y1, frameH),
       below,
-      name,
-      confPct,
+      name: o.label,
+      confPct: Math.round(o.confidence * 100),
       color: below ? colors.uncertain : meta.color,
       chip: meta.chip,
     };
   });
 
-  const traffic =
-    dets.filter((d) => d.cat === 'traffic').sort((a, b) => b.confidence - a.confidence)[0] ?? null;
+  // depth_corroboration(프레임 단위)이 오면, 가장 큰(=가장 가까울 법한) 장애물의 위험도를 그 값으로 보정.
+  const depth = msg.depth_corroboration ? DEPTH_TO_RISK[msg.depth_corroboration] : null;
+  if (depth) {
+    let primary: Detection | null = null;
+    let maxArea = 0;
+    for (const d of dets) {
+      const area = (d.x2 - d.x1) * (d.y2 - d.y1);
+      if (area > maxArea) { maxArea = area; primary = d; }
+    }
+    if (primary) primary.risk = depth;
+  }
 
   const topObstacle =
     dets
-      .filter((d) => d.kind === 'obstacle' && !d.below)
+      .filter((d) => !d.below)
       .sort((a, b) => RANK[b.risk] - RANK[a.risk] || b.confidence - a.confidence)[0] ?? null;
 
-  return { deviation: msg.deviation ?? 'normal', dets, traffic, topObstacle };
+  return { deviation: msg.deviation ?? 'normal', dets, topObstacle };
 }

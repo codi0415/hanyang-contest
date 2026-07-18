@@ -9,12 +9,10 @@ import { WSClient } from '../net/wsClient';
 import { MockSource, MOCK_FRAME_SIZE } from '../mocks/mockSource';
 import { FrameSender } from './frameSender';
 import { process } from './process';
-import { voiceName } from './classify';
 
 export interface WalkState {
   deviation: Deviation;
   dets: Detection[];
-  traffic: Detection | null;
   topObstacle: Detection | null;
   frameSize: FrameSize;
   conn: ConnState;
@@ -23,7 +21,6 @@ export interface WalkState {
 const EMPTY: WalkState = {
   deviation: 'normal',
   dets: [],
-  traffic: null,
   topObstacle: null,
   frameSize: MOCK_FRAME_SIZE,
   conn: 'connecting',
@@ -70,24 +67,13 @@ export function useDetectionSource(cameraRef: MutableRefObject<Camera | null>, a
         });
       }
 
-      // ── 신호등 (신뢰도 이상일 때만 단정) ──
-      if (r.traffic && !r.traffic.below && r.traffic.sub !== 'unknown') {
-        TTS.announce(
-          'traffic',
-          r.traffic.sub === 'red'
-            ? '빨간불로 보여요. 멈추고 직접 확인하세요.'
-            : '초록불로 보여요. 하지만 직접 확인하고 건너세요.',
-        );
-      }
-
-      // ── 장애물 ──
+      // ── 장애물 (신호등 포함, 색상 없이 일반 장애물로 안내) ──
       if (r.topObstacle) {
         const t = r.topObstacle;
         const near = t.risk === 'near';
-        const vname = voiceName(t.cat, t.sub);
         TTS.announce(
           near ? 'obstacleNear' : 'obstacleMid',
-          near ? `전방 가까이 ${vname} 있어요. 주의하세요.` : `전방에 ${vname} 있어요.`,
+          near ? `전방 가까이 ${t.name} 있어요. 주의하세요.` : `전방에 ${t.name} 있어요.`,
         );
         if (near && haptic) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
         pushHistory({ label: `${t.name} 감지`, detail: `전방 ${t.risk === 'near' ? '가까움' : t.risk === 'mid' ? '보통' : '멂'} · ${t.confPct}%`, risk: t.risk });

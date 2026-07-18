@@ -40,7 +40,7 @@ export function BoundingBoxOverlay({
                   borderColor: d.color,
                   shadowColor: d.color,
                   borderStyle: d.below ? 'dashed' : 'solid',
-                  borderWidth: !d.below && d.risk === 'near' && d.kind === 'obstacle' ? 4 : 3,
+                  borderWidth: !d.below && d.risk === 'near' ? 4 : 3,
                 },
               ]}
             />

@@ -69,7 +69,7 @@ export function SettingsScreen({ insets }: { insets: { top: number; bottom: numb
             onDec={() => patch({ conf: clamp(settings.conf - 0.05, 0.3, 0.9) })}
             onInc={() => patch({ conf: clamp(settings.conf + 0.05, 0.3, 0.9) })}
           />
-          <Text style={styles.hint}>이 값보다 확신이 낮은 감지는 "확인 필요"로 표시하고 단정적으로 안내하지 않아요. (신호등은 특히 보수적으로)</Text>
+          <Text style={styles.hint}>이 값보다 확신이 낮은 감지는 "확인 필요"로 표시하고 음성으로 단정하지 않아요.</Text>
         </ColRow>
 
         <Row label="서버 연결 (끄면 Mock)">

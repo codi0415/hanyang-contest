@@ -12,19 +12,7 @@ export const colors = {
   white: '#ffffff',
 };
 
-// 카테고리별 메타 (kind: obstacle=경고, info=신호등, guide=보도블록[위험 아님])
-export const CAT: Record<
-  string,
-  { name: string; chip: string; color: string; kind: 'obstacle' | 'info' | 'guide' }
-> = {
-  traffic: { name: '신호등', chip: '🚦', color: '#ffd23f', kind: 'info' },
-  braille: { name: '보도블록', chip: '⠿', color: '#7ee8a8', kind: 'guide' },
-  person: { name: '사람', chip: '🚶', color: '#ff6b6b', kind: 'obstacle' },
-  pole: { name: '기둥', chip: '🧱', color: '#ffb347', kind: 'obstacle' },
-  puddle: { name: '물웅덩이', chip: '💧', color: '#4fc3f7', kind: 'obstacle' },
-  stairs: { name: '계단', chip: '🪜', color: '#ff8a5c', kind: 'obstacle' },
-  other: { name: '기타', chip: '⚠️', color: '#ffc04d', kind: 'obstacle' },
-};
+// 라벨→표시 메타는 perception/classify.ts 의 LABELS 테이블 참고.
 
 export const RISK_KO: Record<string, string> = { near: '가까움', mid: '보통', far: '멂' };
 

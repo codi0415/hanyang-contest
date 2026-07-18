@@ -4,15 +4,9 @@
 export type Deviation = 'normal' | 'left' | 'right';
 
 export interface ServerObstacle {
-  label: string;           // 한국어 라벨 ("사람", "기둥", "신호등" 등)
-  confidence: number;      // 0.0~1.0
+  label: string;           // COCO 14종 한국어 라벨 (labels.ts 참고)
+  confidence: number;      // 0.0~1.0 (소수 3자리 반올림)
   x1: number; y1: number; x2: number; y2: number; // 전송한 프레임 픽셀 좌표
-  // 선택 필드(백엔드 확장 대비): 신호등 색/계단 방향 등이 별도 필드로 올 수도 있음
-  state?: string;
-  color?: string;
-  direction?: string;
-  class?: string;
-  type?: string;
 }
 
 export interface ServerMessage {
@@ -27,17 +21,15 @@ export interface ServerError {
 }
 
 // ── 프론트 파생 타입 ──
-export type Category = 'traffic' | 'braille' | 'person' | 'pole' | 'puddle' | 'stairs' | 'other';
-export type CatKind = 'obstacle' | 'info' | 'guide';
+// COCO 사전학습 기준 카테고리. 신호등도 (현재 색상 정보 없음) 일반 장애물로 취급.
+export type Category = 'person' | 'vehicle' | 'animal' | 'signal' | 'sign' | 'fixed';
 export type Risk = 'near' | 'mid' | 'far';
 
 export interface Detection extends ServerObstacle {
   cat: Category;
-  sub: string;          // traffic: red|green|unknown, stairs: up|down|''
-  kind: CatKind;
   risk: Risk;
   below: boolean;       // 신뢰도 임계값 미달 = "확인필요"
-  name: string;         // 화면 표기명 (예: 빨간불, 계단↓)
+  name: string;         // 화면/음성 표기명 (= 라벨)
   confPct: number;
   color: string;
   chip: string;         // 이모지

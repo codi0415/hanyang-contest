@@ -5,7 +5,6 @@ import { Camera, useCameraDevice, useCameraPermission } from 'react-native-visio
 
 import { useDetectionSource } from '../perception/useDetectionSource';
 import { StatusPill } from '../components/StatusPill';
-import { TrafficLightCard } from '../components/TrafficLightCard';
 import { DetectionChips } from '../components/DetectionChips';
 import { ObstacleAlertCard } from '../components/ObstacleAlertCard';
 import { BoundingBoxOverlay } from '../components/BoundingBoxOverlay';
@@ -47,12 +46,11 @@ export function ActiveWalkScreen({ insets }: { insets: { top: number; bottom: nu
       {/* 바운딩 박스 */}
       <BoundingBoxOverlay dets={state.dets} frameSize={state.frameSize} layout={layout} />
 
-      {/* 상단: 이탈 상태 + 연결 배지 + 신호등 */}
+      {/* 상단: 이탈 상태 + 연결 배지 */}
       <StatusPill deviation={state.deviation} top={insets.top + 8} />
       <View style={[styles.conn, { top: insets.top + 10 }, connStyle(state.conn)]}>
         <Text style={styles.connText}>{connLabel(state.conn)}</Text>
       </View>
-      <TrafficLightCard traffic={state.traffic} top={insets.top + 50} />
 
       {/* 이탈 방향 화살표 */}
       {state.deviation !== 'normal' && (
